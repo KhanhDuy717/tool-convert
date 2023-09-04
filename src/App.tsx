@@ -182,7 +182,7 @@ function App() {
     <>
       <Grid
         container
-        spacing={2}
+        spacing={3}
         justifyContent="center"
         alignItems="center"
         marginTop={5}>
