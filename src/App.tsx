@@ -51,11 +51,13 @@ function App() {
 
     const convertString = fields?.map((field) => {
       const words = field.split("_");
+      if(words && words !== ""){
       const formatWord = words.map((word) => {
         return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
       });
       const camelCase = formatWord.join("");
       return `${pattern1}.set${camelCase}(${pattern2}.get${camelCase}());`;
+      }
     });
     return convertString?.join("\n");
   }, []);
@@ -214,7 +216,7 @@ function App() {
                     )}
                   />
                 </Grid>
-                <Grid item xs={6.5} md={6.5} sm={6.5}>
+                <Grid item xs={6.4} md={6.4} sm={6.4}>
                   <TextField
                     label="Table Name"
                     fullWidth
@@ -246,7 +248,7 @@ function App() {
                 size="small"
                 fullWidth
                 inputProps={{ "data-testid": "entityName" }}
-                disabled={!disabled}
+                disabled={disabled}
                 {...register("entityName")}
               />
             </Grid>
@@ -271,7 +273,7 @@ function App() {
         </Grid>
         <Grid item container xs={5.5} sm={5.5} lg={5.5} md={5.5}>
           <Grid item container xs={12} md={12} sm={12}>
-            <Grid item xs={8.75} md={8.75} sm={8.75}>
+            <Grid item xs={8.6} md={8.6} sm={8.6}>
               {!disabled && (
                 <Controller
                   name="convertTo"
