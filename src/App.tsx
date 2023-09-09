@@ -223,12 +223,7 @@ function App() {
   }, [getValues]);
   return (
     <>
-      <Grid
-        container
-        spacing={3}
-        justifyContent="center"
-        alignItems="center"
-        marginTop={5}>
+      <Grid container spacing={3} justifyContent="center" alignItems="center">
         <Grid item xs={12} sm={11}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={12} textAlign="center">
@@ -306,7 +301,7 @@ function App() {
             <TextField
               label="Fields"
               multiline
-              rows={15}
+              rows={12}
               fullWidth
               inputProps={{ "data-testid": "fields" }}
               {...register("fields")}
@@ -316,7 +311,7 @@ function App() {
         <Grid item container xs={5.5} sm={5.5} lg={5.5} md={5.5}>
           <Grid item container xs={12} md={12} sm={12}>
             <Grid item container xs={8.5} md={8.5} sm={8.5} lg={8.5}>
-              {!disabled && (
+              {showEntity && (
                 <Controller
                   name="convertTo"
                   control={control}
@@ -366,7 +361,7 @@ function App() {
               label="Result"
               focused
               multiline
-              rows={15}
+              rows={12}
               fullWidth
               inputProps={{ "data-testid": "result" }}
               value={result}
