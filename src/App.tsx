@@ -200,7 +200,7 @@ function App() {
   const dto = watch("dtoName");
   const tableName = watch("tableName");
   const type = watch("type");
-  const disabled = useMemo(() => type === Type.MAPPER, [type]);
+  const showEntity = useMemo(() => type === Type.MAPPER, [type]);
   const result = useMemo(
     () =>
       convert({
@@ -272,7 +272,7 @@ function App() {
                 {...register("dtoName")}
               />
             </Grid>
-            {disabled && (
+            {showEntity && (
               <Grid item xs={6}>
                 <TextField
                   label="Entity Name"
@@ -283,7 +283,7 @@ function App() {
                 />
               </Grid>
             )}
-            {!disabled && (
+            {!showEntity && (
               <Grid item xs={6}>
                 <TextField
                   label="Table Name"
