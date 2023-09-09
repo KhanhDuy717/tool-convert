@@ -33,34 +33,68 @@ function App() {
       defaultValues: { convertTo: Convert.DTO, type: Type.MAPPER },
     }
   );
-
-  const convertMapper = useCallback((data?: FormValues) => {
-    if (data?.fields === undefined || data?.fields === "") {
-      return;
-    }
-    const fields = data?.fields?.split("\n");
-
-    const pattern1 =
-      data?.convertTo === Convert.ENTITY
-        ? data?.entityName || Convert.ENTITY
-        : data?.dtoName || Convert.DTO;
-    const pattern2 =
-      data?.convertTo !== Convert.ENTITY
-        ? data?.entityName || Convert.ENTITY
-        : data?.dtoName || Convert.DTO;
-
-    const convertString = fields?.map((field) => {
-      const words = field.split("_");
-      if(words && words !== ""){
-      const formatWord = words.map((word) => {
-        return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
-      });
-      const camelCase = formatWord.join("");
-      return `${pattern1}.set${camelCase}(${pattern2}.get${camelCase}());`;
+  const logicCamelCase = useCallback(
+    (words: string[], pattern1?: string, pattern2?: string) => {
+      if (words.length === 1) {
+        return `${pattern1}.set${
+          words[0].charAt(0).toUpperCase() +
+          words[0].substring(1, words[0].length)
+        }(${pattern2}.get${words}());`;
       }
-    });
-    return convertString?.join("\n");
-  }, []);
+      if (words) {
+        const formatWord = words.map((word) => {
+          return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
+        });
+        return formatWord.join("");
+      }
+    },
+    []
+  );
+
+  const convertMapper = useCallback(
+    (data?: FormValues) => {
+      if (data?.fields === undefined || data?.fields === "") {
+        return;
+      }
+      const fields = data?.fields?.split("\n");
+
+      const pattern1 =
+        data?.convertTo === Convert.ENTITY
+          ? data?.entityName || Convert.ENTITY
+          : data?.dtoName || Convert.DTO;
+      const pattern2 =
+        data?.convertTo !== Convert.ENTITY
+          ? data?.entityName || Convert.ENTITY
+          : data?.dtoName || Convert.DTO;
+
+      const convertString = fields?.map((field) => {
+        const xml = field.split(" ");
+        const words = field.split("_");
+        if (
+          xml[0] === "" ||
+          xml[0].includes("<") ||
+          xml[0].includes("xml") ||
+          xml[0].includes("version") ||
+          xml[0].includes("dataset") ||
+          xml[0].includes("standalone")
+        ) {
+          return undefined;
+        }
+
+        if (words && words.length === 1) {
+          return `${pattern1}.set${
+            words[0].charAt(0).toUpperCase() +
+            words[0].substring(1, words[0].length)
+          }(${pattern2}.get${words}());`;
+        }
+
+        const camelCase = logicCamelCase(words, pattern1, pattern2);
+        return `${pattern1}.set${camelCase}(${pattern2}.get${camelCase}());`;
+      });
+      return convertString?.join("\n");
+    },
+    [logicCamelCase]
+  );
 
   const logicConvertXml = useCallback(
     (dataRow: string[], pattern1: string, indexData: number) => {
@@ -74,14 +108,13 @@ function App() {
         ) {
           const subIndex = row.indexOf("=");
           const nameDto = row.substring(0, subIndex);
-          const upper =
-            nameDto.substring(0, 1).toUpperCase() + nameDto.substring(1);
-          const subData = row.substring(subIndex + 2, row.length - 2);
+          const camelCase = logicCamelCase(nameDto.split("_"));
+          const subData = row.substring(subIndex + 2, row.length - 1);
           const resultSet =
             pattern1 +
             (indexData + 1) +
             ".set" +
-            upper +
+            camelCase +
             '("' +
             subData +
             '");';
@@ -90,7 +123,30 @@ function App() {
       });
       return xmlArray;
     },
-    []
+    [logicCamelCase]
+  );
+
+  const handleToXmlNoTableName = useCallback(
+    (data: FormValues, pattern1: string, dataRows: string[][]) => {
+      let xmlArray = "";
+      dataRows.map((row, index) => {
+        if (
+          row &&
+          row[0]
+            .replace("_", "")
+            .toUpperCase()
+            .includes(data.tableName.toUpperCase().replace("_", "").trim())
+        ) {
+          const result = logicConvertXml(row, pattern1, index);
+          if (result) {
+            xmlArray += "\n//data " + (index + 1) + "\n";
+            xmlArray += result;
+          }
+        }
+      });
+      return xmlArray;
+    },
+    [logicConvertXml]
   );
 
   const convertXml = useCallback(
@@ -105,39 +161,23 @@ function App() {
       }
 
       const pattern1 = data?.dtoName || Convert.DTO;
-      let xmlArray = "";
       if (
         (data.tableName && data.tableName !== "") ||
         data.tableName !== undefined
       ) {
-        dataRows.map((row, index) => {
-          if (
-            row &&
-            row[0]
-              .replace("_", "")
-              .toUpperCase()
-              .includes(data.tableName.toUpperCase().replace("_", "").trim())
-          ) {
-            const result = logicConvertXml(row, pattern1, index);
-            if (result) {
-              xmlArray += "//data " + (index + 1) + "\n";
-              xmlArray += result;
-            }
-          }
-        });
-        return xmlArray;
+        handleToXmlNoTableName(data, pattern1, dataRows);
       }
-
+      let xmlArray = "";
       dataRows.map((row, index) => {
         const result = logicConvertXml(row, pattern1, index);
         if (result) {
-          xmlArray += "//data " + (index + 1) + "\n";
+          xmlArray += "\n//data " + (index + 1) + "\n";
           xmlArray += result;
         }
       });
       return xmlArray;
     },
-    [logicConvertXml]
+    [handleToXmlNoTableName, logicConvertXml]
   );
 
   const convert = useCallback(
@@ -146,7 +186,7 @@ function App() {
         return;
       }
       if (data?.type === Type.MAPPER) {
-        setValue("result", convertMapper(data));
+        setValue("result", convertMapper(data)?.replace("\n", ""));
         return;
       }
       setValue("result", convertXml(data));
@@ -174,6 +214,7 @@ function App() {
 
     [convert, convertTo, dto, entity, fields, tableName, type]
   );
+
   const handleCopy = useCallback(() => {
     const convertedData = getValues("result");
     if (convertedData) {
@@ -193,47 +234,36 @@ function App() {
             <Grid item xs={12} sm={12} textAlign="center">
               <h1>TOOL CONVERT SIÊU CẤP VÍP PRO</h1>
             </Grid>
-            <Grid item container xs={5.5} sm={5.5} lg={5.5} md={5.5}>
-              <Grid item container xs={12} md={12} sm={12} spacing={5}>
-                <Grid item xs={5.45}>
-                  <Controller
-                    name="type"
-                    control={control}
-                    render={({ field }) => (
-                      <RadioGroup {...field} row>
-                        <FormControlLabel
-                          value="mapper"
-                          control={<Radio />}
-                          label="Mapper"
-                          defaultChecked
-                        />
-                        <FormControlLabel
-                          value="XML"
-                          control={<Radio />}
-                          label="XML"
-                        />
-                      </RadioGroup>
-                    )}
-                  />
-                </Grid>
-                <Grid item xs={6.4} md={6.4} sm={6.4}>
-                  <TextField
-                    label="Table Name"
-                    fullWidth
-                    size="small"
-                    inputProps={{ "data-testid": "tableName" }}
-                    {...register("tableName")}
-                    disabled={disabled}
-                    required
-                  />
-                </Grid>
-              </Grid>
+          </Grid>
+        </Grid>
+        <Grid item container xs={11} sm={11} lg={11} md={11}>
+          <Grid item container xs={5.5} md={5.5} sm={5.5}>
+            <Grid item container xs={6} md={6} sm={6} lg={6}>
+              <Controller
+                name="type"
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup {...field} row>
+                    <FormControlLabel
+                      value="mapper"
+                      control={<Radio />}
+                      label="Mapper"
+                      defaultChecked
+                    />
+                    <FormControlLabel
+                      value="XML"
+                      control={<Radio />}
+                      label="XML"
+                    />
+                  </RadioGroup>
+                )}
+              />
             </Grid>
           </Grid>
         </Grid>
         <Grid item container xs={5.5} sm={5.5} lg={5.5} md={5.5}>
           <Grid item container xs={12} md={12} sm={12} spacing={5}>
-            <Grid item xs={5}>
+            <Grid item xs={6}>
               <TextField
                 label="DTO Name"
                 size="small"
@@ -242,23 +272,35 @@ function App() {
                 {...register("dtoName")}
               />
             </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Entity Name"
-                size="small"
-                fullWidth
-                inputProps={{ "data-testid": "entityName" }}
-                disabled={disabled}
-                {...register("entityName")}
-              />
-            </Grid>
+            {disabled && (
+              <Grid item xs={6}>
+                <TextField
+                  label="Entity Name"
+                  size="small"
+                  fullWidth
+                  inputProps={{ "data-testid": "entityName" }}
+                  {...register("entityName")}
+                />
+              </Grid>
+            )}
+            {!disabled && (
+              <Grid item xs={6}>
+                <TextField
+                  label="Table Name"
+                  fullWidth
+                  size="small"
+                  inputProps={{ "data-testid": "tableName" }}
+                  {...register("tableName")}
+                />
+              </Grid>
+            )}
           </Grid>
           <Grid
             item
-            xs={11}
-            sm={11}
-            lg={11}
-            md={11}
+            xs={12}
+            sm={12}
+            lg={12}
+            md={12}
             marginTop={2}
             marginBottom={3}>
             <TextField
@@ -273,7 +315,7 @@ function App() {
         </Grid>
         <Grid item container xs={5.5} sm={5.5} lg={5.5} md={5.5}>
           <Grid item container xs={12} md={12} sm={12}>
-            <Grid item xs={8.6} md={8.6} sm={8.6}>
+            <Grid item container xs={8.5} md={8.5} sm={8.5} lg={8.5}>
               {!disabled && (
                 <Controller
                   name="convertTo"
@@ -297,18 +339,27 @@ function App() {
               )}
             </Grid>
             {/* Rest of the code */}
-            <Grid item xs={3} md={3} sm={3}>
-              <Button variant="contained" onClick={handleCopy}>
-                Copy Data
-              </Button>
+            <Grid
+              item
+              container
+              xs={3.5}
+              md={3.5}
+              sm={3.5}
+              lg={3.5}
+              justifyContent="flex-end">
+              <Grid item>
+                <Button variant="contained" onClick={handleCopy}>
+                  Copy Data
+                </Button>
+              </Grid>
             </Grid>
           </Grid>
           <Grid
             item
-            xs={11}
-            sm={11}
-            lg={11}
-            md={11}
+            xs={12}
+            sm={12}
+            lg={12}
+            md={12}
             marginTop={2}
             marginBottom={3}>
             <TextField
