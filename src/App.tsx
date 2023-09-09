@@ -200,7 +200,7 @@ function App() {
   const dto = watch("dtoName");
   const tableName = watch("tableName");
   const type = watch("type");
-  const disabled = useMemo(() => type !== Type.MAPPER, [type]);
+  const disabled = useMemo(() => type === Type.MAPPER, [type]);
   const result = useMemo(
     () =>
       convert({
