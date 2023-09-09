@@ -333,7 +333,6 @@ function App() {
                 />
               )}
             </Grid>
-            {/* Rest of the code */}
             <Grid
               item
               container
