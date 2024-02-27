@@ -65,6 +65,7 @@ function App() {
   const handleChangeInput = useCallback(() => {
     setValue("result", "");
   }, [setValue]);
+
   return (
     <>
       <Grid
@@ -81,7 +82,7 @@ function App() {
         <Grid item xs={12} sm={11}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={12} textAlign="center">
-              <h1>CREATE PARAMS</h1>
+              <h1>Active Report</h1>
             </Grid>
             <Grid item container>
               <Grid item container justifyContent="left" alignContent="left">
@@ -166,7 +167,6 @@ function App() {
             <Grid item container>
               <Grid item xs={11} sm={11} lg={11} md={11}>
                 <TextField
-                  label="Results"
                   focused
                   multiline
                   rows={15}
