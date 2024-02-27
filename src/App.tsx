@@ -66,6 +66,15 @@ function App() {
     setValue("result", "");
   }, [setValue]);
 
+  const handleOnChangeToString = useCallback(() => {
+    setValue("type", "1");
+    handleOnChangeParams();
+  }, [handleOnChangeParams, setValue]);
+
+  const handleOnChangeToBoolean = useCallback(() => {
+    setValue("type", "0");
+    handleOnChangeParams();
+  }, [handleOnChangeParams, setValue]);
   return (
     <>
       <Grid
@@ -86,7 +95,7 @@ function App() {
             </Grid>
             <Grid item container>
               <Grid item container justifyContent="left" alignContent="left">
-                <Grid item xs={1.5} md={1.5} xl={1.5} lg={1.5}>
+                <Grid item xs={2} md={2} xl={1.5} lg={1.5}>
                   <Controller
                     name="type"
                     control={control}
@@ -96,13 +105,13 @@ function App() {
                           value="1"
                           control={<Radio />}
                           label="String"
-                          onChange={handleOnChangeParams}
+                          onChange={handleOnChangeToString}
                         />
                         <FormControlLabel
                           value="0"
                           control={<Radio />}
                           label="Boolean"
-                          onChange={handleOnChangeParams}
+                          onChange={handleOnChangeToBoolean}
                         />
                       </RadioGroup>
                     )}
