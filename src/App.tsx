@@ -86,7 +86,7 @@ function App() {
             </Grid>
             <Grid item container>
               <Grid item container justifyContent="left" alignContent="left">
-                <Grid item xs={2} md={2} xl={2} lg={2}>
+                <Grid item xs={1.5} md={1.5} xl={1.5} lg={1.5}>
                   <Controller
                     name="type"
                     control={control}
@@ -96,11 +96,13 @@ function App() {
                           value="1"
                           control={<Radio />}
                           label="String"
+                          onChange={handleOnChangeParams}
                         />
                         <FormControlLabel
                           value="0"
                           control={<Radio />}
                           label="Boolean"
+                          onChange={handleOnChangeParams}
                         />
                       </RadioGroup>
                     )}
@@ -110,10 +112,10 @@ function App() {
                   item
                   container
                   spacing={2}
-                  xs={3}
-                  md={3}
-                  xl={3}
-                  lg={3}
+                  xs={4}
+                  md={4}
+                  xl={4}
+                  lg={4}
                   justifyContent="flex-start"
                   alignContent="flex-start"
                   alignItems="flex-start">
@@ -125,17 +127,31 @@ function App() {
                       Create
                     </Button>
                   </Grid>
-                  <Grid item>
-                    <Button variant="contained" onClick={handleCopy} fullWidth>
-                      Copy
-                    </Button>
-                  </Grid>
+
                   <Grid item>
                     <Button
                       variant="contained"
                       onClick={handleOnClearText}
                       fullWidth>
                       Clear
+                    </Button>
+                  </Grid>
+                </Grid>
+                <Grid
+                  item
+                  container
+                  spacing={2}
+                  xs={3}
+                  md={3}
+                  xl={3}
+                  lg={3}
+                  marginLeft={8.7}
+                  justifyContent="flex-start"
+                  alignContent="flex-start"
+                  alignItems="flex-start">
+                  <Grid item>
+                    <Button variant="contained" onClick={handleCopy} fullWidth>
+                      Copy
                     </Button>
                   </Grid>
                 </Grid>
