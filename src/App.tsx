@@ -41,7 +41,9 @@ function App() {
           '","Nullable":true,"Prompt":"' +
           name +
           '","ValidValues":{"OrderBy":{"Condition":"None"}}}';
-        results?.push(param);
+        if (!results?.includes(param)) {
+          results?.push(param);
+        }
       }
     });
     if (results?.length <= 0) {
